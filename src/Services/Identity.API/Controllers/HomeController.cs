@@ -1,22 +1,30 @@
-﻿using System.Threading.Tasks;
+﻿// Copyright (c) Brock Allen & Dominick Baier. All rights reserved.
+// Licensed under the Apache License, Version 2.0. See LICENSE in the project root for license information.
+
+
+using eShopOnContainers.Identity;
+using Identity.API.Services;
+using IdentityServer4.Quickstart.UI.Models;
+using IdentityServer4.Services;
 using Microsoft.AspNetCore.Mvc;
 using Microsoft.Extensions.Options;
-using Identity.Services;
-using Microsoft.AspNetCore.Authorization;
+using System.Threading.Tasks;
 
-namespace Identity.Controllers
+namespace IdentityServer4.Quickstart.UI.Controllers
 {
-    [Authorize]
     public class HomeController : Controller
     {
+        private readonly IIdentityServerInteractionService _interaction;
         private readonly IOptionsSnapshot<AppSettings> _settings;
         private readonly IRedirectService _redirectSvc;
 
-        public HomeController(IOptionsSnapshot<AppSettings> settings, IRedirectService redirectSvc)
+        public HomeController(IIdentityServerInteractionService interaction, IOptionsSnapshot<AppSettings> settings,IRedirectService redirectSvc)
         {
+            _interaction = interaction;
             _settings = settings;
             _redirectSvc = redirectSvc;
         }
+
         public IActionResult Index(string returnUrl)
         {
             return View();
@@ -35,7 +43,14 @@ namespace Identity.Controllers
         /// </summary>
         public async Task<IActionResult> Error(string errorId)
         {
-            var vm = new Identity.Models.ErrorViewModel();
+            var vm = new ErrorViewModel();
+
+            // retrieve error details from identityserver
+            var message = await _interaction.GetErrorContextAsync(errorId);
+            if (message != null)
+            {
+                vm.Error = message;
+            }
 
             return View("Error", vm);
         }

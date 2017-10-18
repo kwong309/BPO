@@ -1,16 +1,31 @@
-﻿using Microsoft.AspNetCore.Builder;
+﻿using Autofac;
+using Autofac.Extensions.DependencyInjection;
+using eShopOnContainers.Identity;
+using Identity.API.Certificate;
+using Identity.API.Configuration;
+using Identity.API.Data;
+using Identity.API.Models;
+using Identity.API.Services;
+using IdentityServer4.EntityFramework.DbContexts;
+using IdentityServer4.EntityFramework.Mappers;
+using IdentityServer4.Services;
+using Microsoft.AspNetCore.Builder;
 using Microsoft.AspNetCore.Hosting;
+using Microsoft.AspNetCore.Identity;
+using Microsoft.EntityFrameworkCore;
+using Microsoft.eShopOnContainers.BuildingBlocks;
+using Microsoft.eShopOnContainers.Services.Catalog.API.Infrastructure;
 using Microsoft.Extensions.Configuration;
 using Microsoft.Extensions.DependencyInjection;
-using Microsoft.EntityFrameworkCore;
-using Identity.Data;
-using Microsoft.AspNetCore.Authentication.Cookies;
-using Microsoft.AspNetCore.Http;
-using Microsoft.AspNetCore.Authentication.OpenIdConnect;
-using BPO.Model;
-using Microsoft.AspNetCore.Identity;
+using Microsoft.Extensions.HealthChecks;
+using Microsoft.Extensions.Logging;
+using System;
+using System.Collections.Generic;
+using System.Linq;
+using System.Reflection;
+using System.Threading.Tasks;
 
-namespace Identity.API
+namespace Microsoft.eShopOnContainers.Services.Identity
 {
     public class Startup
     {
@@ -22,43 +37,107 @@ namespace Identity.API
         public IConfiguration Configuration { get; }
 
         // This method gets called by the runtime. Use this method to add services to the container.
-        public void ConfigureServices(IServiceCollection services)
+        public IServiceProvider ConfigureServices(IServiceCollection services)
         {
-            var connectionString = Configuration.GetConnectionString("DefaultConnection");
-            // Add framework services.
-            services.AddDbContext<BPOIdentityDbContext>(options =>
-           options.UseSqlServer(connectionString));
-            services.AddAuthentication(sharedOptions =>
-            {
-                sharedOptions.DefaultSignInScheme = CookieAuthenticationDefaults.AuthenticationScheme;
-                sharedOptions.DefaultAuthenticateScheme = CookieAuthenticationDefaults.AuthenticationScheme;
-            })
-.AddCookie(o => o.LoginPath = new PathString("/account/login"));
-            services.AddIdentity<User, Role>()
-            .AddEntityFrameworkStores<BPOIdentityDbContext>().AddDefaultTokenProviders();
 
-            //services.AddSession();
+            // Add framework services.
+            services.AddDbContext<ApplicationDbContext>(options =>
+             options.UseSqlServer(Configuration.GetConnectionString("DefaultConnection")));
+
+            services.AddIdentity<ApplicationUser, IdentityRole>()
+                .AddEntityFrameworkStores<ApplicationDbContext>()
+                .AddDefaultTokenProviders();
+
+            services.Configure<AppSettings>(Configuration);
+
             services.AddMvc();
+
+            if (Configuration.GetValue<string>("IsClusterEnv") == bool.TrueString)
+            {
+                services.AddDataProtection(opts =>
+                {
+                    opts.ApplicationDiscriminator = "eshop.identity";
+                })
+                .PersistKeysToRedis(Configuration["DPConnectionString"]);
+            }
+
+            services.AddHealthChecks(checks =>
+            {
+                var minutes = 1;
+                if (int.TryParse(Configuration["HealthCheck:Timeout"], out var minutesParsed))
+                {
+                    minutes = minutesParsed;
+                }
+                checks.AddSqlCheck("Identity_Db", Configuration.GetConnectionString("DefaultConnection"), TimeSpan.FromMinutes(minutes));
+            });
+
+            services.AddTransient<IEmailSender, AuthMessageSender>();
+            services.AddTransient<ISmsSender, AuthMessageSender>();
+            services.AddTransient<ILoginService<ApplicationUser>, EFLoginService>();
+            services.AddTransient<IRedirectService, RedirectService>();
+
+            var connectionString = Configuration.GetConnectionString("DefaultConnection");
+            var migrationsAssembly = typeof(Startup).GetTypeInfo().Assembly.GetName().Name;
+
+            // Adds IdentityServer
+            services.AddIdentityServer(x => x.IssuerUri = "null")
+                .AddSigningCredential(Certificate.Get())
+                .AddAspNetIdentity<ApplicationUser>()
+                .AddConfigurationStore(options =>
+                {
+                    options.ConfigureDbContext = builder => builder.UseSqlServer(connectionString, opts =>
+                        opts.MigrationsAssembly(migrationsAssembly));
+                })
+                .AddOperationalStore(options =>
+                 {
+                     options.ConfigureDbContext = builder => builder.UseSqlServer(connectionString, opts =>
+                          opts.MigrationsAssembly(migrationsAssembly));
+                 })
+                .Services.AddTransient<IProfileService, ProfileService>();
+
+            var container = new ContainerBuilder();
+            container.Populate(services);
+
+            return new AutofacServiceProvider(container.Build());
         }
 
         // This method gets called by the runtime. Use this method to configure the HTTP request pipeline.
-        public void Configure(IApplicationBuilder app, IHostingEnvironment env)
+        public void Configure(IApplicationBuilder app, IHostingEnvironment env, ILoggerFactory loggerFactory)
         {
+            loggerFactory.AddConsole(Configuration.GetSection("Logging"));
+            loggerFactory.AddDebug();
+
             if (env.IsDevelopment())
             {
                 app.UseDeveloperExceptionPage();
-                app.UseBrowserLink();
+                app.UseDatabaseErrorPage();
             }
             else
             {
                 app.UseExceptionHandler("/Home/Error");
             }
 
-            //app.UseIdentityServer();
+            var pathBase = Configuration["PATH_BASE"];
+            if (!string.IsNullOrEmpty(pathBase))
+            {
+                loggerFactory.CreateLogger("init").LogDebug($"Using PATH BASE '{pathBase}'");
+                app.UsePathBase(pathBase);
+            }            
+
             app.UseStaticFiles();
-            //app.UseSession();
+
+
+            // Make work identity server redirections in Edge and lastest versions of browers. WARN: Not valid in a production environment.
+            app.Use(async (context, next) =>
+            {
+                context.Response.Headers.Add("Content-Security-Policy", "script-src 'unsafe-inline'");
+                await next();
+            });
+
             app.UseAuthentication();
 
+            // Adds IdentityServer
+            app.UseIdentityServer();
 
             app.UseMvc(routes =>
             {
@@ -66,6 +145,63 @@ namespace Identity.API
                     name: "default",
                     template: "{controller=Home}/{action=Index}/{id?}");
             });
+
+            // Store idsrv grant config into db
+            InitializeGrantStoreAndConfiguration(app).Wait();
+
+            //Seed Data
+            var hasher = new PasswordHasher<ApplicationUser>();
+            new ApplicationContextSeed(hasher).SeedAsync(app, env, loggerFactory).Wait();
+        }
+
+        private async Task InitializeGrantStoreAndConfiguration(IApplicationBuilder app)
+        {
+            //callbacks urls from config:
+            Dictionary<string, string> clientUrls = new Dictionary<string, string>();
+            clientUrls.Add("Mvc", Configuration.GetValue<string>("MvcClient"));
+            clientUrls.Add("Spa", Configuration.GetValue<string>("SpaClient"));
+            clientUrls.Add("Xamarin", Configuration.GetValue<string>("XamarinCallback"));
+            clientUrls.Add("LocationsApi", Configuration.GetValue<string>("LocationApiClient"));
+            clientUrls.Add("MarketingApi", Configuration.GetValue<string>("MarketingApiClient"));
+            clientUrls.Add("BasketApi", Configuration.GetValue<string>("BasketApiClient"));
+            clientUrls.Add("OrderingApi", Configuration.GetValue<string>("OrderingApiClient"));
+
+            using (var serviceScope = app.ApplicationServices.GetService<IServiceScopeFactory>().CreateScope())
+            {
+                serviceScope.ServiceProvider.GetRequiredService<PersistedGrantDbContext>()
+                    .Database
+                    .Migrate();
+
+                var context = serviceScope.ServiceProvider.GetRequiredService<ConfigurationDbContext>();
+                context.Database.Migrate();
+
+                if (!context.Clients.Any())
+                {
+                    foreach (var client in Config.GetClients(clientUrls))
+                    {
+                        await context.Clients.AddAsync(client.ToEntity());
+                    }
+                    await context.SaveChangesAsync();
+                }
+
+                if (!context.IdentityResources.Any())
+                {
+                    foreach (var resource in Config.GetResources())
+                    {
+                        await context.IdentityResources.AddAsync(resource.ToEntity());
+                    }
+                    await context.SaveChangesAsync();
+                }
+
+                if (!context.ApiResources.Any())
+                {
+                    foreach (var api in Config.GetApis())
+                    {
+                        await context.ApiResources.AddAsync(api.ToEntity());
+                    }
+                    await context.SaveChangesAsync();
+                }
+            }
         }
     }
 }

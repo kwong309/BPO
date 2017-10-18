@@ -1,0 +1,13 @@
+<Project Sdk="Microsoft.NET.Sdk">
+
+  <PropertyGroup>
+    <TargetFramework>netstandard2.0</TargetFramework>
+  </PropertyGroup>
+
+  <ItemGroup>
+    <Compile Remove="Cache\ContainerCacheStrategy\ContainerItemCollection.cs" />
+    <Compile Remove="Cache\Lock\CacheLockWrapper.cs" />
+    <Compile Remove="Cache\Lock\CacheLockWrapperExtension.cs" />
+  </ItemGroup>
+
+</Project>

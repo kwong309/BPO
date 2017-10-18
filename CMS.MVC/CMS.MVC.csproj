@@ -1,0 +1,40 @@
+<Project Sdk="Microsoft.NET.Sdk.Web">
+
+  <PropertyGroup>
+    <TargetFramework>netcoreapp2.0</TargetFramework>
+  </PropertyGroup>
+
+  <ItemGroup>
+    <PackageReference Include="Microsoft.AspNetCore.All" Version="2.0.0" />
+    <PackageReference Include="Microsoft.EntityFrameworkCore.SqlServer" Version="2.0.0" />
+    <PackageReference Include="Microsoft.EntityFrameworkCore.Tools" Version="2.0.0" />
+    <PackageReference Include="Microsoft.VisualStudio.Web.CodeGeneration.Design" Version="2.0.0" />
+    <PackageReference Include="Pomelo.EntityFrameworkCore.MySql" Version="2.0.0-rtm-10061" />
+    <PackageReference Include="ZKWeb.System.Drawing" Version="4.0.0" />
+  </ItemGroup>
+
+  <ItemGroup>
+    <DotNetCliToolReference Include="Microsoft.VisualStudio.Web.CodeGeneration.Tools" Version="2.0.0" />
+  </ItemGroup>
+
+  <ItemGroup>
+    <Folder Include="Models\" />
+    <Folder Include="Views\Shared\" />
+  </ItemGroup>
+
+  <ItemGroup>
+    <None Include="Configs\database.config" />
+    <None Include="Configs\system.config" />
+    <None Include="wwwroot\images\banner1.svg" />
+    <None Include="wwwroot\images\banner2.svg" />
+    <None Include="wwwroot\images\banner3.svg" />
+    <None Include="wwwroot\images\banner4.svg" />
+  </ItemGroup>
+
+  <ItemGroup>
+    <Content Update="Configs\log4net.config">
+      <CopyToOutputDirectory>PreserveNewest</CopyToOutputDirectory>
+    </Content>
+  </ItemGroup>
+
+</Project>

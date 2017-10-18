@@ -46,8 +46,4 @@
     <None Include="Views\Home\Index.cshtml" />
   </ItemGroup>
 
-  <ItemGroup>
-    <ProjectReference Include="..\..\BuildingBlocks\BPO.Core\BPO.Core.csproj" />
-  </ItemGroup>
-
 </Project>

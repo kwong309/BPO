@@ -1,32 +1,33 @@
-﻿using BPO.Model;
+﻿using Identity.API.Models;
 using Microsoft.AspNetCore.Identity;
+using System;
+using System.Collections.Generic;
+using System.Linq;
 using System.Threading.Tasks;
 
-namespace Identity.Services
+namespace Identity.API.Services
 {
-    public class EFLoginService : ILoginService<User>
+    public class EFLoginService : ILoginService<ApplicationUser>
     {
-        UserManager<User> _userManager;
-        SignInManager<User> _signInManager;
+        UserManager<ApplicationUser> _userManager;
+        SignInManager<ApplicationUser> _signInManager;
 
-        public EFLoginService(UserManager<User> userManager, SignInManager<User> signInManager)
-        {
+        public EFLoginService(UserManager<ApplicationUser> userManager, SignInManager<ApplicationUser> signInManager) {
             _userManager = userManager;
             _signInManager = signInManager;
         }
 
-        public async Task<User> FindByUsername(string user)
+        public async Task<ApplicationUser> FindByUsername(string user)
         {
             return await _userManager.FindByEmailAsync(user);
         }
 
-        public async Task<bool> ValidateCredentials(User user, string password)
+        public async Task<bool> ValidateCredentials(ApplicationUser user, string password)
         {
             return await _userManager.CheckPasswordAsync(user, password);
         }
 
-        public Task SignIn(User user)
-        {
+        public Task SignIn(ApplicationUser user) {
             return _signInManager.SignInAsync(user, true);
         }
     }

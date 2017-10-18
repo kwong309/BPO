@@ -1,0 +1,138 @@
+﻿
+@{
+    Layout = null;
+}
+<!DOCTYPE html>
+<!--[if IE 8]> <html lang="en" class="ie8"> <![endif]-->
+<!--[if IE 9]> <html lang="en" class="ie9"> <![endif]-->
+<!--[if !IE]><!-->
+<html lang="en">
+<!--<![endif]-->
+<!-- BEGIN HEAD -->
+<head>
+    <meta http-equiv="Content-Type" content="text/html; charset=utf-8" />
+    <meta http-equiv="X-UA-Compatible" content="IE=edge" />
+    <meta content="width=device-width, initial-scale=1, maximum-scale=1, user-scalable=no" name="viewport">
+    <meta name="renderer" content="webkit" />
+    <title>管理员登录</title>
+    <link href="~/lib/css/font-awesome.css" rel="stylesheet" />
+    <script src="~/lib/jquery/jquery-1.9.1.min.js"></script>
+    <link href="~/lib/bootstrap/dist/css/bootstrap.css" rel="stylesheet" />
+    <script src="~/lib/bootstrap/dist/js/bootstrap.js"></script>
+    <!--[if lt IE 9]>
+    <script src="../lib/bootstrap/js/html5shiv.min.js"></script>
+    <script src="../lib/bootstrap/js/respond.min.js"></script>
+    <![endif]-->
+
+    <script language="JavaScript">
+        if (window.top != self) {
+            window.top.location = self.location;
+        }
+        $(document).ready(function () { $('#TbAccount').focus(); });
+    </script>
+    <link href="~/css/login.css" rel="stylesheet" />
+    <link href="~/images/siteserver_icon.png" rel="icon" type="image/png" />
+</head>
+<body class="yunBg">
+    <form class="form-inline" autocomplete="off">
+        <div class="yunMain">
+            <div class="yunTop">
+                <a class="yunLogo" href="http://www.siteserver.cn"><img src="~/images/login/siteserver.png" /></a>
+            </div>
+            <div class="yunItmName">
+                <img src="~/images/login/yun_ico1.jpg" width="31" height="32" /><span class="yunItmS">管理员登录</span>
+            </div>
+            <div class="yunBox">
+                <div style="width: auto 0; margin: 0 100px" class="login_tips">
+                    @ViewData["Message"]
+                </div>
+                <br>
+                <div class="yun_u1">
+                    <ul>
+                        <li>
+                            <span class="yun_s1">账号：</span>
+                            <input class="yun_int1" id="txt_account" />
+                        </li>
+                        <li>
+                            <span class="yun_s1">密码：</span>
+                            <input type="password" class="yun_int1" id="txt_password" />
+                        </li>
+                        <li>
+                            <span class="yun_s1">验证码：</span>
+                            <input id="txt_code" maxlength="4" class="yun_int1 yun_int2" type="text" placeholder="验证码">
+                            <img class="imgcode" src="~/Account/GetAuthCode"   />
+                            看不清？<a class="switchCode" href="javascript:void(0)" style="text-decoration: none;">换一张</a>
+                        </li>
+                        <li>
+                            <span class="yun_s1">&nbsp;</span>
+                            <label class="checkbox">
+                                <input type="checkbox" class="input-" id="rememberMe" checked="checked" />记住用户名
+                            </label>
+                        </li>
+                        <li>
+                            <span class="yun_s1">&nbsp;</span>
+                            <input type="submit" class="yun_submit" id="login_button" Style="width: 101px" />
+                            &nbsp;<a href="findPwd.aspx">找回密码？</a>
+                        </li>
+                    </ul>
+                </div>
+            </div>
+            <div class="yunFooter">
+                北京百容千域软件技术开发有限公司 版权所有 Copyright © 2003-
+                <script>document.write(new Date().getFullYear());</script>
+            </div>
+        </div>
+    </form>
+    <script>
+        function formMessage(msg) {
+            $('.login_tips').find('.tips_msg').remove();
+            $('.login_tips').append('<div class="tips_msg alert alert-danger" role="alert"><i class="fa fa-question-circle"></i>' + msg + '</div>');
+        }
+        $(".switchCode").click(function () {
+            $(".imgcode").attr("src", "/Account/GetAuthCode?time=" + Math.random());
+        });
+        $("#login_button").click(function () {
+            var $username = $("#txt_account");
+            var $password = $("#txt_password");
+            var $code = $("#txt_code");
+            if ($username.val() == "") {
+                $username.focus();
+                formMessage('请输入用户名。');
+                return false;
+            } else if ($password.val() == "") {
+                $password.focus();
+                formMessage('请输入登录密码。');
+                return false;
+            } else if ($code.val() == "") {
+                $code.focus();
+                formMessage('请输入验证码。');
+                return false;
+            } else {
+                $("#login_button").attr('disabled', 'disabled').find('span').html("loading...");
+                $.ajax({
+                    url: "/Account/Login",
+                    data: { UserName: $.trim($username.val()), Password: $password.val(), Code: $.trim($code.val()), Type: 0 },
+                    type: "post",
+                    dataType: "json",
+                    success: function (data) {
+                        if (data.state == "success") {
+                            $("#login_button").find('span').html("登录成功，正在跳转...");
+                            window.setTimeout(function () {
+                                window.location.href = "/Home/Index";
+                            }, 500);
+                        } else {
+                            $("#login_button").removeAttr('disabled').find('span').html("登录");
+                            $("#switchCode").trigger("click");
+                            $code.val('');
+                            formMessage(data.message);
+                        }
+                    },
+                    error: function (XMLHttpRequest, textStatus, errorThrown) {
+                        document.write(XMLHttpRequest.responseText + errorThrown);
+                    }
+                });
+            }
+        });
+    </script>
+</body>
+</html>

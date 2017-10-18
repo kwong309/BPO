@@ -1,151 +1,226 @@
-﻿using System;
-using System.Linq;
-using System.Threading.Tasks;
-using Microsoft.AspNetCore.Mvc;
-using BPO.Model;
-using Microsoft.AspNetCore.Identity;
-using Identity.Models;
+﻿// Copyright (c) Brock Allen & Dominick Baier. All rights reserved.
+// Licensed under the Apache License, Version 2.0. See LICENSE in the project root for license information.
+
+
+using Identity.API.Models;
+using Identity.API.Models.AccountViewModels;
+using Identity.API.Services;
+using IdentityModel;
+using IdentityServer4.Models;
+using IdentityServer4.Services;
+using IdentityServer4.Stores;
 using Microsoft.AspNetCore.Authentication;
+using Microsoft.AspNetCore.Authorization;
+using Microsoft.AspNetCore.Identity;
+using Microsoft.AspNetCore.Mvc;
+using Microsoft.Extensions.Logging;
+using System;
+using System.Linq;
 using System.Security.Claims;
 using System.Text.Encodings.Web;
-using Microsoft.AspNetCore.Authorization;
-using Microsoft.AspNetCore.Http;
-using Microsoft.Extensions.Logging;
+using System.Threading.Tasks;
 
-namespace Identity.Controllers
+namespace IdentityServer4.Quickstart.UI.Controllers
 {
-    [Authorize]
+    /// <summary>
+    /// This sample controller implements a typical login/logout/provision workflow for local and external accounts.
+    /// The login service encapsulates the interactions with the user data store. This data store is in-memory only and cannot be used for production!
+    /// The interaction service provides a way for the UI to communicate with identityserver for validation and context retrieval
+    /// </summary>
     public class AccountController : Controller
     {
-        private readonly UserManager<User> _userManager;
-        private readonly SignInManager<User> _signInManager;
-        private readonly ILogger _logger;
+        //private readonly InMemoryUserLoginService _loginService;
+        private readonly ILoginService<ApplicationUser> _loginService;
+        private readonly IIdentityServerInteractionService _interaction;
+        private readonly IClientStore _clientStore;
+        private readonly ILogger<AccountController> _logger;
+        private readonly UserManager<ApplicationUser> _userManager;
 
         public AccountController(
-            UserManager<User> userManager, SignInManager<User> signInManager,
-            ILoggerFactory loggerFactory)
+
+            //InMemoryUserLoginService loginService,
+            ILoginService<ApplicationUser> loginService,
+            IIdentityServerInteractionService interaction,
+            IClientStore clientStore,
+            ILogger<AccountController> logger,
+            UserManager<ApplicationUser> userManager)
         {
+            _loginService = loginService;
+            _interaction = interaction;
+            _clientStore = clientStore;
+            _logger = logger;
             _userManager = userManager;
-            _signInManager = signInManager;
-            _logger = loggerFactory.CreateLogger<AccountController>();
         }
-        public Task<User> GetCurrentUser()
-        {
-            return _userManager.GetUserAsync(HttpContext.User);
-        }
-        private IActionResult RedirectToLocal(string returnUrl)
-        {
-            if (Url.IsLocalUrl(returnUrl))
-            {
-                return Redirect(returnUrl);
-            }
-            else
-            {
-                return RedirectToAction(nameof(HomeController.Index), "Home");
-            }
-        }
+
         /// <summary>
         /// Show login page
         /// </summary>
         [HttpGet]
-        [AllowAnonymous]
         public async Task<IActionResult> Login(string returnUrl)
         {
-            // Clear the existing external cookie to ensure a clean login process
-            await HttpContext.SignOutAsync(IdentityConstants.ExternalScheme);
-
-            ViewData["ReturnUrl"] = returnUrl;
-            return View();
-        }
-
-        //
-        // POST: /Account/Login
-        [HttpPost]
-        [AllowAnonymous]
-        [ValidateAntiForgeryToken]
-        public async Task<IActionResult> Login(LoginViewModel model, string returnUrl = null)
-        {
-            ViewData["ReturnUrl"] = returnUrl;
-            if (ModelState.IsValid)
+            var context = await _interaction.GetAuthorizationContextAsync(returnUrl);
+            if (context?.IdP != null)
             {
-                // This doesn't count login failures towards account lockout
-                // To enable password failures to trigger account lockout, set lockoutOnFailure: true
-                var result = await _signInManager.PasswordSignInAsync(model.Email, model.Password, model.RememberMe, lockoutOnFailure: false);
-                if (result.Succeeded)
-                {
-                    _logger.LogInformation(1, "User logged in.");
-                    return RedirectToLocal(returnUrl);
-                }
-                if (result.RequiresTwoFactor)
-                {
-                 
-                }
-                if (result.IsLockedOut)
-                {
-             
-                }
-                else
-                {
-                    ModelState.AddModelError(string.Empty, "Invalid login attempt.");
-                    return View(model);
-                }
+                // if IdP is passed, then bypass showing the login screen
+                return ExternalLogin(context.IdP, returnUrl);
             }
 
-            // If we got this far, something failed, redisplay form
-            return View(model);
+            var vm = await BuildLoginViewModelAsync(returnUrl, context);
+
+            ViewData["ReturnUrl"] = returnUrl;
+
+            return View(vm);
         }
 
         /// <summary>
         /// Handle postback from username/password login
         /// </summary>
-        //[HttpPost]
-        //[ValidateAntiForgeryToken]
-        //public async Task<IActionResult> Login(LoginViewModel model)
-        //{
-        //    if (ModelState.IsValid)
-        //    {
-        //        var user = await _userManager.FindByEmailAsync(model.Email);
-        //        if (await _userManager.CheckPasswordAsync(user, model.Password))
-        //        {
-        //            AuthenticationProperties props = null;
-        //            if (model.RememberMe)
-        //            {
-        //                props = new AuthenticationProperties
-        //                {
-        //                    IsPersistent = true,
-        //                    ExpiresUtc = DateTimeOffset.UtcNow.AddYears(10)
-        //                };
-        //            };
-        //            UserClaimsPrincipalFactory<User> factory = new UserClaimsPrincipalFactory<User>(_userManager, Microsoft.Extensions.Options.Options.Create<IdentityOptions>(_signInManager.Options));
-        //          var claimsPrincipal=  await factory.CreateAsync(user);
-        
-        //            var scheme = HttpContext.GetIdentityServerAuthenticationScheme();
-        //            var options = HttpContext.RequestServices.GetRequiredService<IdentityServerOptions>();
-        //            var principal = IdentityServerPrincipal.Create("subject", user.UserName);
+        [HttpPost]
+        [ValidateAntiForgeryToken]
+        public async Task<IActionResult> Login(LoginViewModel model)
+        {
+            if (ModelState.IsValid)
+            {
+                var user = await _loginService.FindByUsername(model.Email);
+                if (await _loginService.ValidateCredentials(user, model.Password))
+                {
+                    AuthenticationProperties props = null;
+                    if (model.RememberMe)
+                    {
+                        props = new AuthenticationProperties
+                        {
+                            IsPersistent = true,
+                            ExpiresUtc = DateTimeOffset.UtcNow.AddYears(10)
+                        };
+                    };
 
-        //            await HttpContext.SignInAsync(scheme, principal);
-             
-        //            await _signInManager.SignInAsync(user, true);
-        //            // make sure the returnUrl is still valid, and if yes - redirect back to authorize endpoint
-        //            if (_interaction.IsValidReturnUrl(model.ReturnUrl))
-        //            {
-        //                return Redirect(model.ReturnUrl);
-        //            }
+                    await _loginService.SignIn(user);
+                   
+                    // make sure the returnUrl is still valid, and if yes - redirect back to authorize endpoint
+                    if (_interaction.IsValidReturnUrl(model.ReturnUrl))
+                    {
+                        return Redirect(model.ReturnUrl);
+                    }
 
-        //            return Redirect("~/");
-        //        }
+                    return Redirect("~/");
+                }
 
-        //        ModelState.AddModelError("", "Invalid username or password.");
-        //    }
+                ModelState.AddModelError("", "Invalid username or password.");
+            }
 
-        //    // something went wrong, show form with error
-        //    var vm = await BuildLoginViewModelAsync(model);
-        //    ViewData["ReturnUrl"] = model.ReturnUrl;
-        //    return View(vm);
-        //}
+            // something went wrong, show form with error
+            var vm = await BuildLoginViewModelAsync(model);
 
- 
-        
+            ViewData["ReturnUrl"] = model.ReturnUrl;
+
+            return View(vm);
+        }
+
+        async Task<LoginViewModel> BuildLoginViewModelAsync(string returnUrl, AuthorizationRequest context)
+        {
+            var allowLocal = true;
+            if (context?.ClientId != null)
+            {
+                var client = await _clientStore.FindEnabledClientByIdAsync(context.ClientId);
+                if (client != null)
+                {
+                    allowLocal = client.EnableLocalLogin;
+                }
+            }
+
+            return new LoginViewModel
+            {
+                ReturnUrl = returnUrl,
+                Email = context?.LoginHint,
+            };
+        }
+
+        async Task<LoginViewModel> BuildLoginViewModelAsync(LoginViewModel model)
+        {
+            var context = await _interaction.GetAuthorizationContextAsync(model.ReturnUrl);
+            var vm = await BuildLoginViewModelAsync(model.ReturnUrl, context);
+            vm.Email = model.Email;
+            vm.RememberMe = model.RememberMe;
+            return vm;
+        }
+
+        /// <summary>
+        /// Show logout page
+        /// </summary>
+        [HttpGet]
+        public async Task<IActionResult> Logout(string logoutId)
+        {
+            if (User.Identity.IsAuthenticated == false)
+            {
+                // if the user is not authenticated, then just show logged out page
+                return await Logout(new LogoutViewModel { LogoutId = logoutId });
+            }
+
+            //Test for Xamarin. 
+            var context = await _interaction.GetLogoutContextAsync(logoutId);
+            if (context?.ShowSignoutPrompt == false)
+            {
+                //it's safe to automatically sign-out
+                return await Logout(new LogoutViewModel { LogoutId = logoutId });
+            }
+
+            // show the logout prompt. this prevents attacks where the user
+            // is automatically signed out by another malicious web page.
+            var vm = new LogoutViewModel
+            {
+                LogoutId = logoutId
+            };
+            return View(vm);
+        }
+
+        /// <summary>
+        /// Handle logout page postback
+        /// </summary>
+        [HttpPost]
+        [ValidateAntiForgeryToken]
+        public async Task<IActionResult> Logout(LogoutViewModel model)
+        {
+            var idp = User?.FindFirst(JwtClaimTypes.IdentityProvider)?.Value;
+
+            if (idp != null && idp != IdentityServerConstants.LocalIdentityProvider)
+            {
+                if (model.LogoutId == null)
+                {
+                    // if there's no current logout context, we need to create one
+                    // this captures necessary info from the current logged in user
+                    // before we signout and redirect away to the external IdP for signout
+                    model.LogoutId = await _interaction.CreateLogoutContextAsync();
+                }
+
+                string url = "/Account/Logout?logoutId=" + model.LogoutId;
+
+                try
+                {
+                    
+                    // hack: try/catch to handle social providers that throw
+                    await HttpContext.SignOutAsync(idp, new AuthenticationProperties
+                    {
+                        RedirectUri = url
+                    });
+                }
+                catch (Exception ex)
+                {
+                    _logger.LogCritical(ex.Message);
+                }
+            }
+
+            // delete authentication cookie
+            await HttpContext.SignOutAsync();
+
+            // set this so UI rendering sees an anonymous user
+            HttpContext.User = new ClaimsPrincipal(new ClaimsIdentity());
+
+            // get context information (client name, post logout redirect URI and iframe for federated signout)
+            var logout = await _interaction.GetLogoutContextAsync(model.LogoutId);
+
+            return Redirect(logout?.PostLogoutRedirectUri);
+        }
+
         public async Task<IActionResult> DeviceLogOut(string redirectUrl)
         {
             // delete authentication cookie
@@ -198,11 +273,23 @@ namespace Identity.Controllers
             ViewData["ReturnUrl"] = returnUrl;
             if (ModelState.IsValid)
             {
-                var user = new User
+                var user = new ApplicationUser
                 {
                     UserName = model.Email,
                     Email = model.Email,
+                    CardHolderName = model.User.CardHolderName,
+                    CardNumber = model.User.CardNumber,
+                    CardType = model.User.CardType,
+                    City = model.User.City,
+                    Country = model.User.Country,
+                    Expiration = model.User.Expiration,
+                    LastName = model.User.LastName,
+                    Name = model.User.Name,
+                    Street = model.User.Street,
+                    State = model.User.State,
+                    ZipCode = model.User.ZipCode,
                     PhoneNumber = model.User.PhoneNumber,
+                    SecurityNumber = model.User.SecurityNumber
                 };
                 var result = await _userManager.CreateAsync(user, model.Password);
                 if (result.Errors.Count() > 0)

@@ -1,10 +1,13 @@
-﻿using System.IO;
+﻿// Copyright (c) Brock Allen & Dominick Baier. All rights reserved.
+// Licensed under the Apache License, Version 2.0. See LICENSE in the project root for license information.
+
+using System.IO;
 using System.Reflection;
 using System.Security.Cryptography.X509Certificates;
 
-namespace Identity
+namespace Identity.API.Certificate
 {
-    public static class Certificate
+    static class Certificate
     {
         public static X509Certificate2 Get()
         {
@@ -16,7 +19,7 @@ namespace Identity
              *  real environment the certificate should be created and stored in a secure way, which is out
              *  of the scope of this project.
              **********************************************************************************************/
-            using (var stream = assembly.GetManifestResourceStream("Identity.Certificate.idsrv3test.pfx"))
+            using (var stream = assembly.GetManifestResourceStream("Identity.API.Certificate.idsrv3test.pfx"))
             {
                 return new X509Certificate2(ReadStream(stream), "idsrv3test");
             }

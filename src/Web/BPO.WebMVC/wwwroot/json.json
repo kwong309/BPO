@@ -1,0 +1,157 @@
+﻿{
+  "city": "南宁市",
+  "content": {
+    "description": "道路施工|[(y2017M9d25)(y2022M9d25)]",
+    "features": [
+      {
+        "geometry": {
+          "coordinates": [
+            [ 108.33142, 22.71195 ],
+            [ 108.3314, 22.71204 ],
+            [ 108.3314, 22.71221 ],
+            [ 108.33143, 22.71235 ]
+          ],
+          "type": "LineString"
+        },
+        "properties": {
+          "link_id": 32820553,
+          "orientation": 2,
+          "time_domain": "[(y2017M9d25)(y2022M9d25)]"
+        },
+        "type": "Feature"
+      },
+      {
+        "geometry": {
+          "coordinates": [
+            [ 108.33143, 22.71235 ],
+            [ 108.33171, 22.71253 ],
+            [ 108.33218, 22.71282 ],
+            [ 108.33271, 22.71311 ],
+            [ 108.33326, 22.71335 ],
+            [ 108.33378, 22.71354 ],
+            [ 108.33416, 22.71366 ],
+            [ 108.3345, 22.71376 ]
+          ],
+          "type": "LineString"
+        },
+        "properties": {
+          "link_id": 32820549,
+          "orientation": 1,
+          "time_domain": "[(y2017M9d25)(y2022M9d25)]"
+        },
+        "type": "Feature"
+      }
+    ]
+  },
+  "create_time": "2017-09-26T05:10:24",
+  "examine_et": null,
+  "examine_op": "yangqingqing_map_v",
+  "examine_st": "2017-09-26T14:58:38",
+  "info_id": 169254,
+  "info_timeout": "2017-10-26T05:10:24",
+  "marker": {
+    "coordinates": [ 108.33142, 22.71195 ],
+    "type": "Point"
+  },
+  "open_time": "2017-09-26T05:10:24",
+  "operations": [
+    {
+      "cause": null,
+      "cloned": false,
+      "comment": "system set as open",
+      "end_status": "OPEN",
+      "end_time": "2017-09-26T05:10:24",
+      "info_id": 169254,
+      "op": "system",
+      "op_company": "",
+      "operation_id": 151008,
+      "start_status": "NEW",
+      "start_time": "2017-09-26T05:10:24"
+    },
+    {
+      "cause": null,
+      "cloned": false,
+      "comment": null,
+      "end_status": "EXAMINING",
+      "end_time": "2017-09-26T14:58:38",
+      "info_id": 169254,
+      "op": "yangqingqing_map_v",
+      "op_company": "RuanTong",
+      "operation_id": 152744,
+      "start_status": "OPEN",
+      "start_time": "2017-09-26T05:10:24"
+    }
+  ],
+  "origin_info": [
+    {
+      "city": "南宁市",
+      "content": {
+        "description": "道路施工|[(y2017M9d25)(y2022M9d25)]",
+        "features": [
+          {
+            "geometry": {
+              "coordinates": [
+                [ 108.33142, 22.71195 ],
+                [ 108.3314, 22.71204 ],
+                [ 108.3314, 22.71221 ],
+                [ 108.33143, 22.71235 ]
+              ],
+              "type": "LineString"
+            },
+            "properties": {
+              "link_id": 32820553,
+              "orientation": 2,
+              "time_domain": "[(y2017M9d25)(y2022M9d25)]"
+            },
+            "type": "Feature"
+          },
+          {
+            "geometry": {
+              "coordinates": [
+                [ 108.33143, 22.71235 ],
+                [ 108.33171, 22.71253 ],
+                [ 108.33218, 22.71282 ],
+                [ 108.33271, 22.71311 ],
+                [ 108.33326, 22.71335 ],
+                [ 108.33378, 22.71354 ],
+                [ 108.33416, 22.71366 ],
+                [ 108.3345, 22.71376 ]
+              ],
+              "type": "LineString"
+            },
+            "properties": {
+              "link_id": 32820549,
+              "orientation": 1,
+              "time_domain": "[(y2017M9d25)(y2022M9d25)]"
+            },
+            "type": "Feature"
+          }
+        ]
+      },
+      "create_company": "",
+      "create_op": "",
+      "create_time": "2017-09-26T05:10:24",
+      "create_timespan": 1,
+      "info_timeout": "2017-10-26T05:10:24",
+      "marker": {
+        "coordinates": [ 108.33142, 22.71195 ],
+        "type": "Point"
+      },
+      "origin_id": 68414,
+      "origin_type": 11,
+      "priority": 99,
+      "source": 8,
+      "sub_source": 0,
+      "sub_type": 0,
+      "title": "新增道路施工"
+    }
+  ],
+  "origin_type": 11,
+  "priority": 99,
+  "source": 8,
+  "start_time": "2017-09-26T14:58:38",
+  "status": "EXAMINING",
+  "sub_source": 0,
+  "sub_type": 0,
+  "title": "新增道路施工"
+}

@@ -1,0 +1,198 @@
+﻿<?xml version="1.0" encoding="utf-8"?>
+<Project ToolsVersion="15.0" xmlns="http://schemas.microsoft.com/developer/msbuild/2003">
+  <Import Project="$(MSBuildExtensionsPath)\$(MSBuildToolsVersion)\Microsoft.Common.props" Condition="Exists('$(MSBuildExtensionsPath)\$(MSBuildToolsVersion)\Microsoft.Common.props')" />
+  <PropertyGroup>
+    <Configuration Condition=" '$(Configuration)' == '' ">Debug</Configuration>
+    <Platform Condition=" '$(Platform)' == '' ">AnyCPU</Platform>
+    <ProjectGuid>{F294C856-FF7D-4689-8E84-C6D5BE782E6A}</ProjectGuid>
+    <OutputType>WinExe</OutputType>
+    <RootNamespace>Chrome</RootNamespace>
+    <AssemblyName>Chrome</AssemblyName>
+    <TargetFrameworkVersion>v4.6</TargetFrameworkVersion>
+    <FileAlignment>512</FileAlignment>
+    <TargetFrameworkProfile />
+    <NuGetPackageImportStamp>
+    </NuGetPackageImportStamp>
+  </PropertyGroup>
+  <PropertyGroup Condition=" '$(Configuration)|$(Platform)' == 'Debug|AnyCPU' ">
+    <PlatformTarget>AnyCPU</PlatformTarget>
+    <DebugSymbols>true</DebugSymbols>
+    <DebugType>full</DebugType>
+    <Optimize>false</Optimize>
+    <OutputPath>bin\Debug\</OutputPath>
+    <DefineConstants>DEBUG;TRACE</DefineConstants>
+    <ErrorReport>prompt</ErrorReport>
+    <WarningLevel>4</WarningLevel>
+  </PropertyGroup>
+  <PropertyGroup Condition=" '$(Configuration)|$(Platform)' == 'Release|AnyCPU' ">
+    <PlatformTarget>AnyCPU</PlatformTarget>
+    <DebugType>pdbonly</DebugType>
+    <Optimize>true</Optimize>
+    <OutputPath>bin\Release\</OutputPath>
+    <DefineConstants>TRACE</DefineConstants>
+    <ErrorReport>prompt</ErrorReport>
+    <WarningLevel>4</WarningLevel>
+  </PropertyGroup>
+  <PropertyGroup Condition="'$(Configuration)|$(Platform)' == 'Debug|x86'">
+    <DebugSymbols>true</DebugSymbols>
+    <OutputPath>bin\x86\Debug\</OutputPath>
+    <DefineConstants>DEBUG;TRACE</DefineConstants>
+    <DebugType>full</DebugType>
+    <PlatformTarget>x86</PlatformTarget>
+    <ErrorReport>prompt</ErrorReport>
+    <CodeAnalysisRuleSet>MinimumRecommendedRules.ruleset</CodeAnalysisRuleSet>
+    <Prefer32Bit>true</Prefer32Bit>
+  </PropertyGroup>
+  <PropertyGroup Condition="'$(Configuration)|$(Platform)' == 'Release|x86'">
+    <OutputPath>bin\x86\Release\</OutputPath>
+    <DefineConstants>TRACE</DefineConstants>
+    <Optimize>true</Optimize>
+    <DebugType>pdbonly</DebugType>
+    <PlatformTarget>x86</PlatformTarget>
+    <ErrorReport>prompt</ErrorReport>
+    <CodeAnalysisRuleSet>MinimumRecommendedRules.ruleset</CodeAnalysisRuleSet>
+    <Prefer32Bit>true</Prefer32Bit>
+  </PropertyGroup>
+  <ItemGroup>
+    <Reference Include="System" />
+    <Reference Include="System.Core" />
+    <Reference Include="System.Xml.Linq" />
+    <Reference Include="System.Data.DataSetExtensions" />
+    <Reference Include="Microsoft.CSharp" />
+    <Reference Include="System.Data" />
+    <Reference Include="System.Deployment" />
+    <Reference Include="System.Drawing" />
+    <Reference Include="System.Net.Http" />
+    <Reference Include="System.Windows.Forms" />
+    <Reference Include="System.Xml" />
+  </ItemGroup>
+  <ItemGroup>
+    <Compile Include="AboutBox.cs">
+      <SubType>Form</SubType>
+    </Compile>
+    <Compile Include="AboutBox.Designer.cs">
+      <DependentUpon>AboutBox.cs</DependentUpon>
+    </Compile>
+    <Compile Include="BrowserForm.cs">
+      <SubType>Form</SubType>
+    </Compile>
+    <Compile Include="BrowserForm.designer.cs">
+      <DependentUpon>BrowserForm.cs</DependentUpon>
+    </Compile>
+    <Compile Include="BrowserTabUserControl.cs">
+      <SubType>UserControl</SubType>
+    </Compile>
+    <Compile Include="BrowserTabUserControl.designer.cs">
+      <DependentUpon>BrowserTabUserControl.cs</DependentUpon>
+    </Compile>
+    <Compile Include="ChromeWidgetMessageInterceptor.cs" />
+    <Compile Include="Form1.cs">
+      <SubType>Form</SubType>
+    </Compile>
+    <Compile Include="Form1.Designer.cs">
+      <DependentUpon>Form1.cs</DependentUpon>
+    </Compile>
+    <Compile Include="Handlers\DisplayHandler.cs" />
+    <Compile Include="Handlers\GeolocationHandler.cs" />
+    <Compile Include="Handlers\KeyboardHandler.cs" />
+    <Compile Include="Handlers\LifeSpanHandler.cs" />
+    <Compile Include="Handlers\MenuHandler.cs" />
+    <Compile Include="Handlers\WinFormsBrowserProcessHandler.cs" />
+    <Compile Include="Handlers\WinFormsRequestHandler.cs" />
+    <Compile Include="InputBox.cs">
+      <SubType>Form</SubType>
+    </Compile>
+    <Compile Include="InputBox.designer.cs">
+      <DependentUpon>InputBox.cs</DependentUpon>
+    </Compile>
+    <Compile Include="Minimal\SimpleBrowserForm.cs">
+      <SubType>Form</SubType>
+    </Compile>
+    <Compile Include="Minimal\SimpleBrowserForm.Designer.cs">
+      <DependentUpon>SimpleBrowserForm.cs</DependentUpon>
+    </Compile>
+    <Compile Include="Minimal\TabulationDemoForm.cs">
+      <SubType>Form</SubType>
+    </Compile>
+    <Compile Include="Minimal\TabulationDemoForm.Designer.cs">
+      <DependentUpon>TabulationDemoForm.cs</DependentUpon>
+    </Compile>
+    <Compile Include="Program.cs" />
+    <Compile Include="Properties\AssemblyInfo.cs" />
+    <EmbeddedResource Include="AboutBox.resx">
+      <DependentUpon>AboutBox.cs</DependentUpon>
+    </EmbeddedResource>
+    <EmbeddedResource Include="BrowserForm.resx">
+      <DependentUpon>BrowserForm.cs</DependentUpon>
+    </EmbeddedResource>
+    <EmbeddedResource Include="BrowserTabUserControl.resx">
+      <DependentUpon>BrowserTabUserControl.cs</DependentUpon>
+    </EmbeddedResource>
+    <EmbeddedResource Include="InputBox.resx">
+      <DependentUpon>InputBox.cs</DependentUpon>
+    </EmbeddedResource>
+    <EmbeddedResource Include="Minimal\SimpleBrowserForm.resx">
+      <DependentUpon>SimpleBrowserForm.cs</DependentUpon>
+    </EmbeddedResource>
+    <EmbeddedResource Include="Minimal\TabulationDemoForm.resx">
+      <DependentUpon>TabulationDemoForm.cs</DependentUpon>
+    </EmbeddedResource>
+    <EmbeddedResource Include="Properties\Resources.resx">
+      <Generator>ResXFileCodeGenerator</Generator>
+      <LastGenOutput>Resources.Designer.cs</LastGenOutput>
+      <SubType>Designer</SubType>
+    </EmbeddedResource>
+    <Compile Include="Properties\Resources.Designer.cs">
+      <AutoGen>True</AutoGen>
+      <DependentUpon>Resources.resx</DependentUpon>
+      <DesignTime>True</DesignTime>
+    </Compile>
+    <None Include="packages.config" />
+    <None Include="Properties\Settings.settings">
+      <Generator>SettingsSingleFileGenerator</Generator>
+      <LastGenOutput>Settings.Designer.cs</LastGenOutput>
+    </None>
+    <Compile Include="Properties\Settings.Designer.cs">
+      <AutoGen>True</AutoGen>
+      <DependentUpon>Settings.settings</DependentUpon>
+      <DesignTimeSharedInput>True</DesignTimeSharedInput>
+    </Compile>
+  </ItemGroup>
+  <ItemGroup>
+    <None Include="App.config" />
+  </ItemGroup>
+  <ItemGroup>
+    <WCFMetadata Include="Connected Services\" />
+  </ItemGroup>
+  <ItemGroup>
+    <ProjectReference Include="..\CefSharp.Example\CefSharp.Example.csproj">
+      <Project>{a4394e7b-1155-43a6-989e-8ab72dddc9e4}</Project>
+      <Name>CefSharp.Example</Name>
+    </ProjectReference>
+    <ProjectReference Include="..\CefSharp.WinForms\CefSharp.WinForms.csproj">
+      <Project>{882505ad-246d-402a-8414-347efb8e2c8d}</Project>
+      <Name>CefSharp.WinForms</Name>
+    </ProjectReference>
+    <ProjectReference Include="..\CefSharp\CefSharp.csproj">
+      <Project>{a55848cc-10e7-40cb-addb-04740b16dd43}</Project>
+      <Name>CefSharp</Name>
+    </ProjectReference>
+  </ItemGroup>
+  <ItemGroup>
+    <Content Include="Resources\chromium-256.png" />
+    <Content Include="Resources\nav_left_green.png" />
+    <Content Include="Resources\nav_plain_green.png" />
+    <Content Include="Resources\nav_plain_red.png" />
+    <Content Include="Resources\nav_right_green.png" />
+  </ItemGroup>
+  <Import Project="$(MSBuildToolsPath)\Microsoft.CSharp.targets" />
+  <Import Project="..\..\..\packages\cef.redist.x64.3.2987.1601\build\cef.redist.x64.targets" Condition="Exists('..\..\..\packages\cef.redist.x64.3.2987.1601\build\cef.redist.x64.targets')" />
+  <Target Name="EnsureNuGetPackageBuildImports" BeforeTargets="PrepareForBuild">
+    <PropertyGroup>
+      <ErrorText>这台计算机上缺少此项目引用的 NuGet 程序包。使用“NuGet 程序包还原”可下载这些程序包。有关更多信息，请参见 http://go.microsoft.com/fwlink/?LinkID=322105。缺少的文件是 {0}。</ErrorText>
+    </PropertyGroup>
+    <Error Condition="!Exists('..\..\..\packages\cef.redist.x64.3.2987.1601\build\cef.redist.x64.targets')" Text="$([System.String]::Format('$(ErrorText)', '..\..\..\packages\cef.redist.x64.3.2987.1601\build\cef.redist.x64.targets'))" />
+    <Error Condition="!Exists('..\..\..\packages\cef.redist.x86.3.2987.1601\build\cef.redist.x86.targets')" Text="$([System.String]::Format('$(ErrorText)', '..\..\..\packages\cef.redist.x86.3.2987.1601\build\cef.redist.x86.targets'))" />
+  </Target>
+  <Import Project="..\..\..\packages\cef.redist.x86.3.2987.1601\build\cef.redist.x86.targets" Condition="Exists('..\..\..\packages\cef.redist.x86.3.2987.1601\build\cef.redist.x86.targets')" />
+</Project>

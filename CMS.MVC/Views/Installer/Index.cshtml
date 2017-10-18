@@ -1,0 +1,363 @@
+﻿
+@{
+    Layout = null;
+}
+
+<!DOCTYPE html>
+<!--[if IE 8]> <html lang="en" class="ie8"> <![endif]-->
+<!--[if IE 9]> <html lang="en" class="ie9"> <![endif]-->
+<!--[if !IE]><!-->
+<html lang="en">
+<!--<![endif]-->
+<!-- BEGIN HEAD -->
+<head>
+    <meta http-equiv="Content-Type" content="text/html; charset=utf-8" />
+    <meta http-equiv="X-UA-Compatible" content="IE=edge" />
+    <meta content="width=device-width, initial-scale=1, maximum-scale=1, user-scalable=no" name="viewport">
+    <meta name="renderer" content="webkit" />
+    <title>产品安装向导</title>
+    <link href="~/css/step.css" rel="stylesheet" />
+    <script src="~/lib/jquery/jquery-1.9.1.min.js"></script>
+    <script src="~/js/check_data.js"></script>
+    <link href="~/lib/showLoading/css/showLoading.css" rel="stylesheet" />
+    <script src="~/lib/showLoading/js/jquery.showLoading.js"></script>
+    <script>
+        $(function () {
+            $('.byellow').click(function () {
+                $('#main').showLoading();
+                return true;
+            });
+            $('.next').click(function () {
+                $('#step').val($(this).attr("nextstep"));
+            });
+            $('[name=databaseType]').change(function () {
+                $('#databaseName').empty();
+            });
+            $('#databaseName').click(function () {
+                if ($('#databaseName').html().trim().length == 0) {
+                    var data = { databaseType: $('#databaseType').val(), host: $('#host').val(), uid: $('#uid').val(), pwd: $('#pwd').val() };
+                    if (data.databaseType.trim().length > 0 && data.host.trim().length > 0 && data.uid.trim().length > 0 && data.pwd.trim().length > 0) {
+                        $.post("/Database/Test", data, function (result) {
+                            if (result.state == 1) {
+
+                                for (var i = 0; i < result.data.length; i++) {
+                                    $('#databaseName').append("<option value='" + result.data[i] + "'>" + result.data[i] + "</option>");
+                                }
+                                $('.byellow.next.hidden').removeClass("hidden");
+                            }
+                            else {
+
+                                $('.error').append('<img src="images/check_error.gif" />' + result.message)
+
+                            }
+          
+                        });
+                    }
+                 
+                }
+            });
+            $('#chkIAgree').click(function () {
+               
+                if ($(this).is(':checked')) {
+                    $('.error').empty();
+                    $('.next').removeAttr("disabled");
+                }
+                else {
+                    $('.error').append('<img src="images/check_error.gif" />您必须同意软件许可协议才能安装！ ')
+                    $('.next').attr({ "disabled": "disabled" });
+                }
+            }); 
+            var html = $('.error').html().trim();
+            if (html&&html.length > 0) {
+
+                $('.next.byellow').attr({ "disabled": "disabled" });
+            }
+            switch (@ViewData["Step"]){
+                case 1:
+                    $('#step1').removeClass("hidden");
+                    $('#step2').addClass("hidden");
+                    $('#step3').addClass("hidden");
+                    $('#step4').addClass("hidden");
+                    $('#step5').addClass("hidden");
+                    break;
+                case 2:
+                    $('#step1').addClass("hidden");
+                    $('#step2').removeClass("hidden");
+                    $('#step3').addClass("hidden");
+                    $('#step4').addClass("hidden");
+                    $('#step5').addClass("hidden");
+                    break;
+                case 3:
+                    $('#step1').addClass("hidden");
+                    $('#step2').addClass("hidden");
+                    $('#step3').removeClass("hidden");
+                    $('#step4').addClass("hidden");
+                    $('#step5').addClass("hidden");
+                    break;
+                case 4:
+                    $('#step1').addClass("hidden");
+                    $('#step2').addClass("hidden");
+                    $('#step3').addClass("hidden");
+                    $('#step4').removeClass("hidden");
+                    $('#step5').addClass("hidden");
+                    break;
+                case 5:
+                    $('#step1').addClass("hidden");
+                    $('#step2').addClass("hidden");
+                    $('#step3').addClass("hidden");
+                    $('#step4').addClass("hidden");
+                    $('#step5').removeClass("hidden");
+                    break;
+            }
+        });
+    </script>
+</head>
+
+<body>
+    <div class="wrap">
+        <div class="top">
+            <div class="top-logo"> </div>
+            <div class="top-link">
+                <ul>
+                    <li>
+                        <A href="http://www.a715.cn/" target="_blank">官方网站</A>
+                    </li>
+                    <li>
+                        <A href="http://bbs.a715.cn/" target="_blank">技术论坛</A>
+                    </li>
+                    <li>
+                        <A href="http://cms.a715.cn/" target="_blank">系统帮助</A>
+                    </li>
+                </ul>
+            </div>
+            <div class="top-version">
+                <h2>
+                    @ViewData["VersionInfo"]
+                    安装向导
+                </h2>
+            </div>
+        </div>
+        <div id="main">
+            <div class="box">
+                <h2>安装进度</h2>
+                <ul class="list_step">
+                    @Html.Raw(ViewData["StepTitle"])
+                </ul>
+            </div>
+            <div class="box noline">
+                <form id="installForm"  method="post" action="/Installer"  >
+                    <input type="text" class="hidden" name="step" id="step" value="" />
+                    <div class="form_detail">
+                        <div class="error">
+                            @Html.Raw(ViewData["ErrorMessage"])
+                        </div>
+                        <div id="step1">
+                            <table cellpadding="0" cellspacing="0" width="660" border="0">
+                                <tbody>
+                                    <tr>
+                                        <td>
+                                            <h3>SiteServer 系列产品许可协议</h3>
+                                        </td>
+                                        <td nowrap align="right"><img src="../images/Installer/printerIcon.gif"> <a href="eula.html" target="new"> 可打印版本</a></td>
+                                    <tr>
+                                        <td colspan="2">&nbsp;</td>
+                                    </tr>
+                                    <tr>
+                                        <td valign="top" class="center" colspan="2">
+                                            <iframe style="border-color:#999999; border-width:1px;" scrolling="yes" src="eula.html" height="264" width="660"></iframe>
+                                        </td>
+                                    </tr>
+                                    <tr>
+                                        <td colspan="2">&nbsp;</td>
+                                    </tr>
+                                    <tr>
+                                        <td valign="top" align="right" colspan="2">
+                                            <span class="im">我已经阅读并同意此协议</span>
+                                            <input type="checkbox" id="chkIAgree" checked="checked"/> &nbsp;
+                                            <input type="submit" nextstep="2"  class="btn byellow next" value="继 续" />
+                                        </td>
+                                    </tr>
+                                </tbody>
+                            </table>
+                        </div>
+                        <div id="step2">
+                            <div>
+                                <div class=pr-title>
+                                    <h3>服务器信息</h3>
+                                </div>
+                                <table class="twbox">
+                                    <tbody>
+                                        <tr>
+                                            <th>
+                                                <strong>参数</strong>
+                                            </th>
+                                            <th>
+                                                <strong>值</strong>
+                                            </th>
+                                        </tr>
+                                        <tr>
+                                            <td>服务器域名</td>
+                                            <td>
+                                                @ViewData["Domain"]
+                                            </td>
+                                        </tr>
+                                        <tr>
+                                            <td>SiteServer 版本</td>
+                                            <td>
+                                               @ViewData["Version"]
+                                            </td>
+                                        </tr>
+                                        <tr>
+                                            <td>.NET版本</td>
+                                            <td>
+                                                @ViewData["NetVersion"]
+                                            </td>
+                                        </tr>
+                                        <tr>
+                                            <td>系统根目录</td>
+                                            <td>
+                                                @ViewData["PhysicalApplicationPath"]
+                                            </td>
+                                        </tr>
+                                    </tbody>
+                                </table>
+                                <div class=pr-title>
+                                    <h3>目录权限检测</h3>
+                                </div>
+                                <div style="PADDING-BOTTOM: 0px; LINE-HEIGHT: 33px; PADDING-LEFT: 8px; PADDING-RIGHT: 8px; HEIGHT: 23px; COLOR: #666; OVERFLOW: hidden; PADDING-TOP: 2px">系统要求必须满足下列所有的目录权限全部可读写的需求才能使用，如果没有相关权限请添加。 </div>
+                                <table class=twbox border=0 cellSpacing=0 cellPadding=0 width=512 align=center>
+                                    <tbody>
+                                        <tr>
+                                            <th>
+                                                <strong>目录名</strong>
+                                            </th>
+                                            <th width=212><strong>读写权限</strong></th>
+                                        </tr>
+                                        <tr>
+                                            <td>/*</td>
+                                            <td>
+                                                @Html.Raw(ViewData["RootWrite"])
+                                            </td>
+                                        </tr>
+                                        <tr>
+                                            <td>/SiteFiles/*</td>
+                                            <td>
+                                                @Html.Raw(ViewData["SiteFielsWrite"])
+                                            </td>
+                                        </tr>
+                                    </tbody>
+                                </table>
+                                <p style="text-align:right; padding-right:50px;">
+                                    <input type="submit" nextstep="1" class="btn bnormal next" value="后 退" />
+                                    <input type="submit" nextstep="3" class="btn byellow next" value="下一步" />
+                                </p>
+                            </div>
+                        </div>
+                        <div id="step3">
+                            <div class=pr-title>
+                                <h3>选择数据库类型</h3>
+                            </div>
+                            <div style="PADDING-BOTTOM: 10px; LINE-HEIGHT: 33px; PADDING-LEFT: 8px; PADDING-RIGHT: 8px; HEIGHT: 23px; COLOR: #666; OVERFLOW: hidden; PADDING-TOP: 2px">请选择需要安装的数据库类型。 </div>
+                            <p>
+                                <label>数据库类型：</label>
+                                <select name="databaseType" id="databaseType">
+                                    <option value="SqlServer">SqlServer</option>
+                                    <option value="MySql">MySql</option>
+                                </select>
+                            </p>
+                            <div id="sql1">
+                                <div class=pr-title>
+                                    <h3>数据库连接设置</h3>
+                                </div>
+                                <div style="PADDING-BOTTOM: 10px; LINE-HEIGHT: 33px; PADDING-LEFT: 8px; PADDING-RIGHT: 8px; HEIGHT: 23px; COLOR: #666; OVERFLOW: hidden; PADDING-TOP: 2px">在此设置数据库的连接字符串。 </div>
+                                <p>
+                                    <label>数据库主机：</label>
+                                    <input type="text" style="width:285px" class="ipt_tx" id="host" name="host" onblur="checkData(this, 'sqlserver_msg', '数据库主机');" />
+                                    <span id="sqlserver_msg" class="error" style="display:none"></span> <span class="info">IP地址或者服务器名</span>
+                                </p>
+                                @*<p>
+                                    <label>身份验证：</label>
+                                    <select name="isTrustedConnection">
+                                        <option value="1">用户名密码验证</option>
+                                        <option value="2">Windows 身份验证</option>
+                                    </select>
+                                </p>*@
+                                <div id="sqlUserNamePassword">
+                                    <p>
+                                        <label>数据库用户：</label>
+                                        <input type="text" style="width:285px" class="ipt_tx" id="uid" name="uid" onblur="checkData(this, 'sqlusername_msg', '数据库用户');" />
+                                        <span id="sqlusername_msg" class="error" style="display:none"></span> <span class="info">连接数据库的用户名</span>
+                                    </p>
+                                    <p>
+                                        <label>数据库密码：</label>
+                                        <input type="password"   style="width:285px" class="ipt_tx" id="pwd" name="pwd" onblur="checkData(this, 'sqlpassword_msg', '数据库密码');" />
+                                        <span id="sqlpassword_msg" class="error" style="display:none"></span> <span class="info">连接数据库的密码</span>
+                                    </p>
+                                </div>
+                            </div>
+                            <div id="sql2">
+                                <p>
+                                    <label>选择数据库：</label>
+                                    <select name="databaseName" id="databaseName">
+                                    </select>
+                                    <span class="info">选择安装的数据库</span>
+                                </p>
+                            </div>
+                            <p style="text-align:right; padding-right:50px;">
+                                <input type="submit" nextstep="2" class="btn bnormal next" value="后 退" />
+                                <input type="submit" nextstep="4"   class="btn byellow next hidden" value="下一步" />
+                            </p>
+                        </div>
+                        <div id="step4">
+                            <div class=pr-title>
+                                <h3>管理员初始密码</h3>
+                            </div>
+                            <div style="PADDING-BOTTOM: 10px; LINE-HEIGHT: 33px; PADDING-LEFT: 8px; PADDING-RIGHT: 8px; HEIGHT: 23px; COLOR: #666; OVERFLOW: hidden; PADDING-TOP: 2px">在此设置总管理员的登录用户名与密码。</div>
+                            <p>
+                                <label>管理员用户名：</label>
+                                <input type="text" style="width:285px" class="ipt_tx" id="adminName" name="adminName" onblur="checkAdminName();" />
+                                <span id="adminname_msg" class="error" style="display:none"></span> <span class="info">登录后台使用的用户名</span>
+                            </p>
+                            <p>
+                                <label>管理员密码：</label>
+                                <input type="password" style="width:285px" class="ipt_tx" id="adminPassword" name="adminPassword" onblur="checkPassword();" />
+                                <span id="password_msg" class="error" style="display:none"></span> <span class="rank_info">
+                                    密码强度：
+                                    <input type="text" id="passwordLevel" class="rank r0" disabled="disabled" />
+                                </span>
+                            </p>
+                            <p>
+                                <label>确认密码：</label>
+                                <input type="password" style="width:285px" class="ipt_tx" id="comfirmAdminPassword" name="comfirmAdminPassword" onblur="checkConfirmPassword();" />
+                                <span id="confirmPassword_msg" class="error" style="display:none"></span> <span class="info">6-16个字符，支持大小写字母、数字和符号</span>
+                            </p>
+                            <p>
+                                <label>是否加密连接字符串：</label>
+                                <input type="checkbox" id="isProtectData" checked="checked" name="isProtectData" /> 
+                                <span class="info">设置是否加密Web.Config中的数据库连接字符串</span>
+                            </p>
+                            <p style="text-align:right; padding-right:50px;">
+                                <input type="submit" nextstep="3" class="btn bnormal next" value="后 退" />
+                                <input type="submit" nextstep="5" class="btn byellow next " value="下一步" />
+                            </p>
+                        </div>
+                        <div id="step5">
+                            <p class="success" style="background-repeat:no-repeat; padding:15px; padding-left:50px;margin-right:100px;">
+                                恭喜，您已经完成了 SiteServer 系列产品的安装，并已正常运行，
+                                <A href='@ViewData["SiteServerUrl"]'>进入后台</A>。
+                            </p>
+                        </div>
+                    </div>
+                </form>
+            </div>
+        </div>
+    </div>
+    <div id="ft">
+        <p>
+            北京百容千域软件技术开发有限公司 版权所有
+
+        </p>
+    </div>
+</body>
+
+</html>

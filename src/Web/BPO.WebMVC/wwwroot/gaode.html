@@ -1,0 +1,43 @@
+﻿<!DOCTYPE html>
+<html>
+<head>
+    <meta charset="utf-8" />
+    <script src="https://cdn.bootcss.com/jquery/1.12.4/jquery.min.js"></script>
+    <title></title>
+</head>
+<body>
+    <input id="info_id" type="text" value="169254" />
+    <input id="openurl" type="button" value="打开位置" />
+    <a id="amap" href="#" target='_blank' hidden class="hidden"></a>
+    <script>
+        $(function () {
+            $("#openurl").click(function () {
+                var info_id = $("#info_id").val();
+                if (info_id && info_id.length > 0) {
+                    //var url = 'http://geo.map.xiaojukeji.com/drawboard_training/get_info?info_id=' + info_id + '&role=undefined';
+                    var url = "json.json";
+                    $.ajax({
+                            url: url,
+                            dataType: "json",
+                            async: false,
+                            success: function (data) {
+                                var position= data.content.features[0].geometry.coordinates[0];
+                                var amapurl = "https://uri.amap.com/marker?position=" + position + "&name=&src=&coordinate=&callnative=1";
+                                var a = $("#amap").get(0);
+                                a.href = amapurl;
+                                var e = document.createEvent('MouseEvents');
+                                e.initEvent('click', true, true);
+                                a.dispatchEvent(e);
+                            },
+                            error: function () {
+                                alert("Error");
+                            }
+                        });
+                }
+            });
+        });
+        
+       
+    </script>
+</body>
+</html>
